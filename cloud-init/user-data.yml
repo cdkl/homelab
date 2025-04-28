@@ -1,0 +1,17 @@
+#cloud-config
+package_upgrade: true
+packages:
+  - qemu-guest-agent
+
+runcmd:
+  - systemctl enable qemu-guest-agent
+  - systemctl start qemu-guest-agent
+
+# Set password authentication to false for security
+ssh_pwauth: false
+
+# Default user configuration
+user: bunker
+groups: [sudo]
+shell: /bin/bash
+sudo: ALL=(ALL) NOPASSWD:ALL
