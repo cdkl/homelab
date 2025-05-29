@@ -196,8 +196,7 @@ resource "kubernetes_pod" "kegserve" {
     spec {
         container {
             name  = "kegserve"
-            image = "cdklein/kegserve:latest"
-            image_pull_policy = "Always"
+            image = "cdklein/kegserve:20250529.1507"
 
             port {
                 container_port = 80
@@ -216,38 +215,29 @@ resource "kubernetes_pod" "kegserve" {
             }
 
             volume_mount {
-                name       = "config-volume"
-                mount_path = "/config"
-            }
-
-            volume_mount {
                 name       = "data-volume"
                 mount_path = "/data"
             }
+        
 
             env_from {
-              secret_ref {
-                name = kubernetes_secret.kegserve_rails_master_key.metadata[0].name
-              }
-            }
-        }
-
-        volume {
-            name = "config-volume"
-
-            host_path {
-                path = "/mnt/pve/nfs/kegserve/config"
+                secret_ref {
+                    name = kubernetes_secret.kegserve_rails_master_key.metadata[0].name
+                }
             }
         }
 
         volume {
             name = "data-volume"
-
-            host_path {
-                path = "/mnt/pve/nfs/kegserve/data"
+            persistent_volume_claim {
+                claim_name = kubernetes_persistent_volume_claim.kegserve_data.metadata[0].name
             }
         }
     }
+
+    depends_on = [
+        kubernetes_secret.kegserve_rails_master_key
+    ]
 }
 
 resource "kubernetes_service_v1" "kegserve_service" {
@@ -321,5 +311,24 @@ resource "kubernetes_secret" "kegserve_rails_master_key" {
   data = {
     RAILS_MASTER_KEY = var.rails_master_key
   }
+}
+
+# Remove the PV resource entirely since local-path will handle storage
+
+# Update the PVC to remove storage_class_name (will use default local-path)
+resource "kubernetes_persistent_volume_claim" "kegserve_data" {
+  metadata {
+    name = "kegserve-data-pvc"
+    namespace = "default"
+  }
+  spec {
+    access_modes = ["ReadWriteOnce"]
+    resources {
+      requests = {
+        storage = "1Gi"
+      }
+    }
+  }
+  wait_until_bound = false
 }
 
