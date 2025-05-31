@@ -87,7 +87,7 @@ resource kubernetes_manifest "birdnet_go_ingressroute" {
             routes = [{
 
                 kind  = "Rule"
-                match = "Host(`birdnet-go.local`)"
+                match = "Host(`birdnet-go.cdklein.com`)"
                 services =[{
                     kind = "Service"
                     name = "birdnet-go-service"
@@ -283,7 +283,7 @@ resource kubernetes_manifest "kegserve_ingressroute" {
             routes = [{
 
                 kind  = "Rule"
-                match = "Host(`kegserve.local`)"
+                match = "Host(`kegserve.cdklein.com`)"
                 services =[{
                     kind = "Service"
                     name = "kegserve-service"
