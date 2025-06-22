@@ -4,29 +4,15 @@ terraform {
       source  = "telmate/proxmox"
       version = "3.0.1-rc6"
     }
+    helm = {
+      source  = "hashicorp/helm"
+      version = "2.12.1"
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "2.23.0"
+    }
   }
-}
-
-variable "proxmox_api_url" {
-  type = string
-}
-
-variable "proxmox_api_token_id" {
-  type = string
-}
-
-variable "proxmox_api_token_secret" {
-  type = string
-}
-
-variable "proxmox_node" {
-  type        = string
-  description = "The node name of the Proxmox server"
-}
-
-variable "proxmox_vm_user" {
-  type        = string
-  description = "The username to use for the VMs"
 }
 
 provider "proxmox" {
@@ -42,4 +28,6 @@ provider "helm" {
     }
 }
 
-
+provider "kubernetes" {
+    config_path = "~/.kube/config"
+}

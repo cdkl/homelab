@@ -194,6 +194,12 @@ resource "kubernetes_pod" "kegserve" {
     }
 
     spec {
+        security_context {
+            fs_group = 1000
+            run_as_user = 1000
+            run_as_group = 1000
+        }
+
         container {
             name  = "kegserve"
             image = "cdklein/kegserve:20250529.1507"
@@ -212,6 +218,11 @@ resource "kubernetes_pod" "kegserve" {
                     memory = "512Mi"
                     cpu    = "2"
                 }
+            }
+
+            security_context {
+                run_as_user = 1000
+                run_as_group = 1000
             }
 
             volume_mount {
@@ -328,7 +339,32 @@ resource "kubernetes_persistent_volume_claim" "kegserve_data" {
         storage = "1Gi"
       }
     }
+    storage_class_name = data.terraform_remote_state.cluster.outputs.longhorn_storage_class
   }
   wait_until_bound = false
+}
+
+resource kubernetes_manifest "longhorn_ui_ingressroute" {
+    manifest = {
+        apiVersion = "traefik.io/v1alpha1"
+        kind      = "IngressRoute"
+
+        metadata = {
+            namespace = "longhorn-system"
+            name = "longhorn-ui"
+        }
+        spec = {
+            entryPoints = ["web"]
+            routes = [{
+                kind  = "Rule"
+                match = "Host(`longhorn.cdklein.com`)"
+                services = [{
+                    kind = "Service"
+                    name = "longhorn-frontend"
+                    port = 80
+                }]
+            }]
+        }
+    }
 }
 

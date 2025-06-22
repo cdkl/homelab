@@ -48,9 +48,7 @@ resource "proxmox_vm_qemu" "k3s-master" {
 
     ipconfig0 = "ip=dhcp"
 
-    sshkeys = <<EOF
-      ${file("~/.ssh/id_rsa.pub")}
-    EOF
+    sshkeys =  file(pathexpand(var.ssh_public_key_path))
 
     provisioner "remote-exec" {
 
@@ -62,7 +60,7 @@ resource "proxmox_vm_qemu" "k3s-master" {
         connection {
             type        = "ssh"
             user        = var.proxmox_vm_user
-            private_key = file("~/.ssh/id_rsa")
+            private_key = file(pathexpand(var.ssh_private_key_path))
             host        = self.ssh_host
         }
     }
@@ -129,9 +127,7 @@ resource "proxmox_vm_qemu" "k3s-worker" {
 
     ipconfig0 = "ip=dhcp"
 
-    sshkeys = <<EOF
-        ${file("~/.ssh/id_rsa.pub")}
-    EOF
+    sshkeys = file(pathexpand(var.ssh_public_key_path))
 
     # Use the retrieved token for worker node setup
     provisioner "remote-exec" {
@@ -142,7 +138,7 @@ resource "proxmox_vm_qemu" "k3s-worker" {
         connection {
             type        = "ssh"
             user        = var.proxmox_vm_user
-            private_key = file("~/.ssh/id_rsa")
+            private_key = file(pathexpand(var.ssh_private_key_path))
             host        = self.ssh_host
         }
     }
