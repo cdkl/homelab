@@ -21,8 +21,37 @@ resource "helm_release" "longhorn" {
     value = "true"
   }
 
+  set {
+    name  = "defaultBackupStore.backupTarget"
+    value = "nfs://lorez.cdklein.com:/volume1/k3s/longhorn"
+  }
+
   depends_on = [
     kubernetes_namespace.longhorn_system
+  ]
+}
+
+resource "kubernetes_manifest" "longhorn_daily_backup" {
+  manifest = {
+    "apiVersion" = "longhorn.io/v1beta2"
+    "kind"       = "RecurringJob"
+    "metadata" = {
+      "name"      = "daily-backup"
+      "namespace" = kubernetes_namespace.longhorn_system.metadata[0].name
+    }
+    "spec" = {
+      "name"        = "daily-backup"
+      "task"        = "backup"
+      "cron"        = "0 2 * * *" # every day at 2am
+      "retain"      = 7
+      "groups"      = ["default"]
+      "labels"      = {
+        "backup" = "daily"
+      }
+    }
+  }
+  depends_on = [
+    helm_release.longhorn
   ]
 }
 
@@ -30,3 +59,4 @@ resource "helm_release" "longhorn" {
 output "longhorn_storage_class" {
   value = "longhorn"
 }
+
