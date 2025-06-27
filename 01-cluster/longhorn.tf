@@ -42,8 +42,9 @@ resource "kubernetes_manifest" "longhorn_daily_backup" {
     "spec" = {
       "name"        = "daily-backup"
       "task"        = "backup"
-      "cron"        = "0 2 * * *" # every day at 2am
+      "cron"        = "03 6 * * *"
       "retain"      = 7
+      "concurrency" = 1
       "groups"      = ["default"]
       "labels"      = {
         "backup" = "daily"
