@@ -91,6 +91,11 @@ resource "kubernetes_deployment" "technitium" {
             value = "cdklein.com"
           }
 
+          env {
+            name  = "DNS_SERVER_ADMIN_PASSWORD"
+            value = var.technitium_admin_password
+          }
+
           port {
             container_port = 5380
             name          = "web"
@@ -129,11 +134,6 @@ resource "kubernetes_deployment" "technitium" {
             mount_path = "/app/config/init"
           }
 
-          volume_mount {
-            name       = "dns-records"
-            mount_path = "/app/config/records"
-          }
-
           readiness_probe {
             tcp_socket {
               port = 53
@@ -154,13 +154,6 @@ resource "kubernetes_deployment" "technitium" {
           name = "init-config"
           config_map {
             name = kubernetes_config_map.technitium_init.metadata[0].name
-          }
-        }
-
-        volume {
-          name = "dns-records"
-          config_map {
-            name = kubernetes_config_map.dns_records.metadata[0].name
           }
         }
       }
@@ -228,4 +221,8 @@ resource "kubernetes_manifest" "technitium_ui_ingress" {
       }]
     }
   }
+}
+
+output "technitium_admin_password" {
+  value = var.technitium_admin_password
 }
