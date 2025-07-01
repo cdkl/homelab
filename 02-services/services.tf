@@ -324,8 +324,6 @@ resource "kubernetes_secret" "kegserve_rails_master_key" {
   }
 }
 
-# Remove the PV resource entirely since local-path will handle storage
-
 # Update the PVC to remove storage_class_name (will use default local-path)
 resource "kubernetes_persistent_volume_claim" "kegserve_data" {
   metadata {
