@@ -32,7 +32,8 @@ resource "kubernetes_manifest" "traefik_dashboard_service" {
             entryPoints = ["web"]
             routes = [{
                 kind  = "Rule"
-                match = "Host(`traefik.local`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))"
+                match = "Host(`traefik.cdklein.com`)"
+                # match = "Host(`traefik.cdklein.com`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))"
                 services = [{
                     kind = "TraefikService"
                     name = "api@internal"
