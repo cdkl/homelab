@@ -30,3 +30,8 @@ variable "ssh_private_key_path" {
   type        = string
 }
 
+variable "technitium_admin_password" {
+  description = "Admin password for Technitium DNS Server"
+  type        = string
+}
+

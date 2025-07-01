@@ -45,6 +45,14 @@ resource "kubernetes_manifest" "traefik_dashboard_service" {
     depends_on = [ kubernetes_manifest.traefik_dashboard_config ]
 }
 
+resource "technitium_dns_zone_record" "traefik_cdklein" {
+  zone       = technitium_dns_zone.cdklein.name
+  domain     = "traefik.${technitium_dns_zone.cdklein.name}"
+  type       = "A"
+  ttl        = 300
+  ip_address = "192.168.101.234"
+}
+
 resource "kubernetes_service_v1" "birdnet_go_service" {
     metadata {
         namespace = "default"
@@ -102,24 +110,6 @@ resource kubernetes_manifest "birdnet_go_ingressroute" {
         kubernetes_pod.birdnet_go
     ]
 }
-
-# resource "kubernetes_manifest" "traefik-dashboard-config" {
-#     manifest = yamldecode(file("${path.module}/kubernetes/traefik-dashboard-config.yaml"))
-
-#     depends_on = [
-#         proxmox_vm_qemu.k3s-master,
-#         proxmox_vm_qemu.k3s-worker
-#     ]
-# }
-
-# resource "kubernetes_manifest" "traefik_dashboard_service" {
-#   manifest = yamldecode(file("${path.module}/kubernetes/traefik-dashboard-service.yaml"))
-
-#   depends_on = [
-#     proxmox_vm_qemu.k3s-master,
-#     proxmox_vm_qemu.k3s-worker
-#   ]
-# }
 
 resource "kubernetes_pod" "birdnet_go" {
     metadata {
@@ -179,6 +169,14 @@ resource "kubernetes_pod" "birdnet_go" {
         }
     }
 
+}
+
+resource "technitium_dns_zone_record" "birdnet_go_cdklein" {
+  zone       = technitium_dns_zone.cdklein.name
+  domain     = "birdnet-go.${technitium_dns_zone.cdklein.name}"
+  type       = "A"
+  ttl        = 300
+  ip_address =data.terraform_remote_state.cluster.outputs.k3s_master_ip
 }
 
 output "birdnet_go_pod_name" {
@@ -306,12 +304,20 @@ resource kubernetes_manifest "kegserve_ingressroute" {
     }
 
     depends_on = [
-        kubernetes_pod.birdnet_go
+        kubernetes_pod.kegserve
     ]
 }
 
 output "kegserve_pod_name" {
     value = kubernetes_pod.kegserve.metadata[0].name
+}
+
+resource technitium_dns_zone_record "kegserve_cdklein" {
+  zone       = technitium_dns_zone.cdklein.name
+  domain     = "kegserve.${technitium_dns_zone.cdklein.name}"
+  type       = "A"
+  ttl        = 300
+  ip_address = data.terraform_remote_state.cluster.outputs.k3s_master_ip
 }
 
 resource "kubernetes_secret" "kegserve_rails_master_key" {
@@ -324,8 +330,6 @@ resource "kubernetes_secret" "kegserve_rails_master_key" {
     RAILS_MASTER_KEY = var.rails_master_key
   }
 }
-
-# Remove the PV resource entirely since local-path will handle storage
 
 # Update the PVC to remove storage_class_name (will use default local-path)
 resource "kubernetes_persistent_volume_claim" "kegserve_data" {
