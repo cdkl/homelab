@@ -82,33 +82,73 @@ resource "kubernetes_service_v1" "birdnet_go_service" {
     ]
 }
 
-resource kubernetes_manifest "birdnet_go_ingressroute" {
-    manifest = {
-        apiVersion = "traefik.io/v1alpha1"
-        kind      = "IngressRoute"
+# resource "kubernetes_manifest" "birdnet_go_certificate" {
+#   manifest = {
+#     apiVersion = "cert-manager.io/v1"
+#     kind       = "Certificate"
+#     metadata = {
+#       name      = "birdnet-go-cert"
+#       namespace = "default"
+#     }
+#     spec = {
+#       secretName = "birdnet-go-tls"
+#       issuerRef = {
+#         name = "letsencrypt-http"
+#         kind = "ClusterIssuer"
+#       }
+#       dnsNames = ["birdnet-go.cdklein.com"]
+#     }
+#   }
+# }
 
-        metadata = {
-            namespace = "default"
-            name = "birdnet-go-ingressroute"
-        }
-        spec = {
-            entryPoints = ["web"]
-            routes = [{
 
-                kind  = "Rule"
-                match = "Host(`birdnet-go.cdklein.com`)"
-                services =[{
-                    kind = "Service"
-                    name = "birdnet-go-service"
-                    port = 80
-                }]
-            }]
-        }
+resource "kubernetes_manifest" "birdnet_go_internal_certificate" {
+  manifest = {
+    apiVersion = "cert-manager.io/v1"
+    kind       = "Certificate"
+    metadata = {
+      name      = "birdnet-go-internal-cert"
+      namespace = "default"
     }
+    spec = {
+      secretName = "birdnet-go-internal-tls"
+      issuerRef = {
+        name = "internal-ca"
+        kind = "ClusterIssuer"
+      }
+      dnsNames = ["birdnet-go.cdklein.com"]
+    }
+  }
+}
 
-    depends_on = [
-        kubernetes_pod.birdnet_go
-    ]
+resource "kubernetes_manifest" "birdnet_go_ingressroute" {
+  manifest = {
+    apiVersion = "traefik.io/v1alpha1"
+    kind      = "IngressRoute"
+    metadata = {
+      namespace = "default"
+      name      = "birdnet-go-ingressroute"
+    }
+    spec = {
+      entryPoints = ["websecure"]
+      routes = [{
+        kind  = "Rule"
+        match = "Host(`birdnet-go.cdklein.com`)"
+        services =[{
+          kind = "Service"
+          name = "birdnet-go-service"
+          port = 80
+        }]
+      }]
+      tls = {
+        secretName = "birdnet-go-internal-tls"
+      }
+    }
+  }
+  depends_on = [
+    kubernetes_pod.birdnet_go,
+    kubernetes_manifest.birdnet_go_internal_certificate
+  ]
 }
 
 resource "kubernetes_pod" "birdnet_go" {
