@@ -16,6 +16,26 @@ EOT
     }
 }
 
+# Let's Encrypt certificate for traefik dashboard
+resource "kubernetes_manifest" "traefik_letsencrypt_certificate" {
+  manifest = {
+    apiVersion = "cert-manager.io/v1"
+    kind       = "Certificate"
+    metadata = {
+      name      = "traefik-letsencrypt-cert"
+      namespace = "kube-system"
+    }
+    spec = {
+      secretName = "traefik-letsencrypt-tls"
+      issuerRef = {
+        name = "letsencrypt-cloudflare"
+        kind = "ClusterIssuer"
+      }
+      dnsNames = ["traefik.cdklein.com"]
+    }
+  }
+}
+
 resource "kubernetes_manifest" "traefik_dashboard_service" {
     manifest = {
         apiVersion = "traefik.io/v1alpha1"
@@ -25,7 +45,7 @@ resource "kubernetes_manifest" "traefik_dashboard_service" {
             namespace = "kube-system"
         }
         spec = {
-            entryPoints = ["web"]
+            entryPoints = ["websecure"]
             routes = [{
                 kind  = "Rule"
                 match = "Host(`traefik.cdklein.com`)"
@@ -35,6 +55,9 @@ resource "kubernetes_manifest" "traefik_dashboard_service" {
                     name = "api@internal"
                 }]
             }]
+            tls = {
+                secretName = "traefik-letsencrypt-tls"
+            }
         }
     }
 

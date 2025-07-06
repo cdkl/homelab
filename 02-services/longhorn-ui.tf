@@ -1,3 +1,23 @@
+# Let's Encrypt certificate for longhorn
+resource "kubernetes_manifest" "longhorn_letsencrypt_certificate" {
+  manifest = {
+    apiVersion = "cert-manager.io/v1"
+    kind       = "Certificate"
+    metadata = {
+      name      = "longhorn-letsencrypt-cert"
+      namespace = "longhorn-system"
+    }
+    spec = {
+      secretName = "longhorn-letsencrypt-tls"
+      issuerRef = {
+        name = "letsencrypt-cloudflare"
+        kind = "ClusterIssuer"
+      }
+      dnsNames = ["longhorn.cdklein.com"]
+    }
+  }
+}
+
 resource kubernetes_manifest "longhorn_ui_ingressroute" {
     manifest = {
         apiVersion = "traefik.io/v1alpha1"
@@ -8,7 +28,7 @@ resource kubernetes_manifest "longhorn_ui_ingressroute" {
             name = "longhorn-ui"
         }
         spec = {
-            entryPoints = ["web"]
+            entryPoints = ["websecure"]
             routes = [{
                 kind  = "Rule"
                 match = "Host(`longhorn.cdklein.com`)"
@@ -18,6 +38,9 @@ resource kubernetes_manifest "longhorn_ui_ingressroute" {
                     port = 80
                 }]
             }]
+            tls = {
+                secretName = "longhorn-letsencrypt-tls"
+            }
         }
     }
 }

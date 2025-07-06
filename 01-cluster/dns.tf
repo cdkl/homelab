@@ -199,30 +199,6 @@ resource "kubernetes_service" "technitium" {
   }
 }
 
-resource "kubernetes_manifest" "technitium_ui_ingress" {
-  manifest = {
-    apiVersion = "traefik.io/v1alpha1"
-    kind       = "IngressRoute"
-
-    metadata = {
-      namespace = kubernetes_namespace.dns.metadata[0].name
-      name      = "technitium-ui"
-    }
-    spec = {
-      entryPoints = ["web"]
-      routes = [{
-        kind  = "Rule"
-        match = "Host(`dns.cdklein.com`)"
-        services = [{
-          kind = "Service"
-          name = "technitium"
-          port = 80
-        }]
-      }]
-    }
-  }
-}
-
 output "technitium_admin_password" {
   value = var.technitium_admin_password
   sensitive = true

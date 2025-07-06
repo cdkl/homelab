@@ -8,12 +8,16 @@ resource "technitium_dns_zone" "cdklein" {
   # Optionally, you can set additional zone properties here
 }
 
+# dns.cdklein.com DNS directs us specifically to the Technitium DNS server
+# This DNS entry needs to exist for stage 01, so it needs to be established in
+# the DHCP server's DNS manually if bootstrapping from scratch.
+# We specify it here for parallelism with the DHCP server's DNS entry.
 resource "technitium_dns_zone_record" "dns_cdklein" {
-  zone      = technitium_dns_zone.cdklein.name
-  domain      = "dns.${technitium_dns_zone.cdklein.name}"
-  type      = "A"
-  ttl       = 300
-  ip_address   = "192.168.101.233" # The IP assigned to your Technitium service  
+  zone       = technitium_dns_zone.cdklein.name
+  domain     = "dns.${technitium_dns_zone.cdklein.name}"
+  type       = "A"
+  ttl        = 300
+  ip_address = "192.168.101.233"
 }
 
 resource "technitium_dns_zone_record" "homeassistant_cdklein" {
