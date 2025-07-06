@@ -82,38 +82,19 @@ resource "kubernetes_service_v1" "birdnet_go_service" {
     ]
 }
 
-# resource "kubernetes_manifest" "birdnet_go_certificate" {
-#   manifest = {
-#     apiVersion = "cert-manager.io/v1"
-#     kind       = "Certificate"
-#     metadata = {
-#       name      = "birdnet-go-cert"
-#       namespace = "default"
-#     }
-#     spec = {
-#       secretName = "birdnet-go-tls"
-#       issuerRef = {
-#         name = "letsencrypt-http"
-#         kind = "ClusterIssuer"
-#       }
-#       dnsNames = ["birdnet-go.cdklein.com"]
-#     }
-#   }
-# }
-
-
-resource "kubernetes_manifest" "birdnet_go_internal_certificate" {
+# Let's Encrypt certificate for birdnet-go
+resource "kubernetes_manifest" "birdnet_go_letsencrypt_certificate" {
   manifest = {
     apiVersion = "cert-manager.io/v1"
     kind       = "Certificate"
     metadata = {
-      name      = "birdnet-go-internal-cert"
+      name      = "birdnet-go-letsencrypt-cert"
       namespace = "default"
     }
     spec = {
-      secretName = "birdnet-go-internal-tls"
+      secretName = "birdnet-go-letsencrypt-tls"
       issuerRef = {
-        name = "internal-ca"
+        name = "letsencrypt-cloudflare"
         kind = "ClusterIssuer"
       }
       dnsNames = ["birdnet-go.cdklein.com"]
@@ -141,13 +122,12 @@ resource "kubernetes_manifest" "birdnet_go_ingressroute" {
         }]
       }]
       tls = {
-        secretName = "birdnet-go-internal-tls"
+        secretName = "birdnet-go-letsencrypt-tls"
       }
     }
   }
   depends_on = [
-    kubernetes_pod.birdnet_go,
-    kubernetes_manifest.birdnet_go_internal_certificate
+    kubernetes_pod.birdnet_go
   ]
 }
 
@@ -319,6 +299,26 @@ resource "kubernetes_service_v1" "kegserve_service" {
     ]
 }
 
+# Let's Encrypt certificate for kegserve
+resource "kubernetes_manifest" "kegserve_letsencrypt_certificate" {
+  manifest = {
+    apiVersion = "cert-manager.io/v1"
+    kind       = "Certificate"
+    metadata = {
+      name      = "kegserve-letsencrypt-cert"
+      namespace = "default"
+    }
+    spec = {
+      secretName = "kegserve-letsencrypt-tls"
+      issuerRef = {
+        name = "letsencrypt-cloudflare"
+        kind = "ClusterIssuer"
+      }
+      dnsNames = ["kegserve.cdklein.com"]
+    }
+  }
+}
+
 resource kubernetes_manifest "kegserve_ingressroute" {
     manifest = {
         apiVersion = "traefik.io/v1alpha1"
@@ -329,9 +329,8 @@ resource kubernetes_manifest "kegserve_ingressroute" {
             name = "kegserve-ingressroute"
         }
         spec = {
-            entryPoints = ["web"]
+            entryPoints = ["websecure"]
             routes = [{
-
                 kind  = "Rule"
                 match = "Host(`kegserve.cdklein.com`)"
                 services =[{
@@ -340,6 +339,9 @@ resource kubernetes_manifest "kegserve_ingressroute" {
                     port = 80
                 }]
             }]
+            tls = {
+                secretName = "kegserve-letsencrypt-tls"
+            }
         }
     }
 

@@ -225,4 +225,5 @@ resource "kubernetes_manifest" "technitium_ui_ingress" {
 
 output "technitium_admin_password" {
   value = var.technitium_admin_password
+  sensitive = true
 }
