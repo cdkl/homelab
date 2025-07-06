@@ -13,6 +13,10 @@ provider "helm" {
     }
 }
 
+provider "kubernetes" {
+  config_path    = "~/.kube/config"
+}
+
 provider "technitium" {
   host  = "http://dns.cdklein.com"
   username = "admin"
