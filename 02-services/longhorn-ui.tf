@@ -21,3 +21,11 @@ resource kubernetes_manifest "longhorn_ui_ingressroute" {
         }
     }
 }
+
+resource "technitium_dns_zone_record" "longhorn_cdklein" {
+  zone       = technitium_dns_zone.cdklein.name
+  domain     = "longhorn.${technitium_dns_zone.cdklein.name}"
+  type       = "A"
+  ttl        = 300
+  ip_address = data.terraform_remote_state.cluster.outputs.k3s_master_ip
+}
