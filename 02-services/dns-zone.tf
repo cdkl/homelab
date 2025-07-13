@@ -28,6 +28,14 @@ resource "technitium_dns_zone_record" "homeassistant_cdklein" {
   ip_address = "192.168.101.77"
 }
 
+resource "technitium_dns_zone_record" "hunkerbunker_cdklein" {
+  zone       = technitium_dns_zone.cdklein.name
+  domain     = "hunkerbunker.${technitium_dns_zone.cdklein.name}"
+  type       = "A"
+  ttl        = 300
+  ip_address = "192.168.101.77"
+}
+
 resource "technitium_dns_zone_record" "brewpi_cdklein" {
   zone       = technitium_dns_zone.cdklein.name
   domain     = "brewpi.${technitium_dns_zone.cdklein.name}"
