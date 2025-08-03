@@ -3,3 +3,8 @@ variable "rails_master_key" {
   type        = string
   sensitive   = true
 }
+
+variable "tinyauth_users_list" {
+  description = "List of maps containing user: bcrypt_hash pairs"
+  type        = list(map(string))
+}

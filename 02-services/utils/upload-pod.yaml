@@ -1,0 +1,65 @@
+# Static Assets Upload Utility Pod
+#
+# PURPOSE:
+# This utility pod provides a convenient way to upload files to the static-assets PersistentVolumeClaim.
+# It mounts the PVC at /upload, allowing easy file manipulation for TinyAuth background images
+# and other static assets served by the static.cdklein.com service.
+#
+# USAGE WORKFLOW:
+# 1. Create pod → 2. Upload files → 3. Verify files → 4. Tear down pod
+#
+# COMMANDS:
+#
+# 🚀 CREATE POD:
+# kubectl apply -f utils/upload-pod.yaml
+#
+# 📁 UPLOAD FILES:
+# # Method 1: Copy from local machine
+# kubectl cp /path/to/background.jpg default/static-assets-uploader:/upload/background.jpg
+# kubectl cp /path/to/logo.png default/static-assets-uploader:/upload/logo.png
+#
+# # Method 2: Download directly in pod
+# kubectl exec -it static-assets-uploader -- sh
+# apk add --no-cache curl
+# curl -o /upload/background.jpg https://example.com/image.jpg
+# exit
+#
+# # Method 3: Interactive shell for multiple operations
+# kubectl exec -it static-assets-uploader -- sh
+# cd /upload
+# # ... perform file operations ...
+# ls -la  # verify files
+# exit
+#
+# 🔍 VERIFY FILES:
+# kubectl exec static-assets-uploader -- ls -la /upload/
+# kubectl exec static-assets-uploader -- file /upload/background.jpg
+#
+# 🧹 TEAR DOWN:
+# kubectl delete pod static-assets-uploader
+#
+# 💡 TIPS:
+# - Pod stays running for 1 hour (3600 seconds) before auto-terminating
+# - Files persist in the PVC after pod deletion
+# - Use 'kubectl get pods' to check if pod is running
+# - Access files via https://static.cdklein.com/filename after upload
+
+apiVersion: v1
+kind: Pod
+metadata:
+  name: static-assets-uploader
+  namespace: default
+spec:
+  containers:
+  - name: uploader
+    image: alpine:latest
+    command: ["/bin/sh"]
+    args: ["-c", "sleep 3600"] # Keeps the pod running for manual file uploads
+    volumeMounts:
+    - name: static-files
+      mountPath: /upload # Mounts PVC to /upload for easy access
+  volumes:
+  - name: static-files
+    persistentVolumeClaim:
+      claimName: static-assets-pvc
+  restartPolicy: Never # Ensures the pod is not restarted automatically after exit

@@ -36,6 +36,27 @@ resource "kubernetes_manifest" "traefik_letsencrypt_certificate" {
   }
 }
 
+# TinyAuth middleware for kube-system namespace
+resource "kubernetes_manifest" "tinyauth_middleware_traefik" {
+  manifest = {
+    apiVersion = "traefik.io/v1alpha1"
+    kind       = "Middleware"
+    metadata = {
+      name      = "tinyauth"
+      namespace = "kube-system"
+    }
+    spec = {
+      forwardAuth = {
+        address = "http://tinyauth.default.svc.cluster.local:3000/api/auth/traefik"
+        authResponseHeaders = [
+          "X-Forwarded-User"
+        ]
+        trustForwardHeader = true
+      }
+    }
+  }
+}
+
 resource "kubernetes_manifest" "traefik_dashboard_service" {
     manifest = {
         apiVersion = "traefik.io/v1alpha1"
@@ -49,7 +70,9 @@ resource "kubernetes_manifest" "traefik_dashboard_service" {
             routes = [{
                 kind  = "Rule"
                 match = "Host(`traefik.cdklein.com`)"
-                # match = "Host(`traefik.cdklein.com`) && (PathPrefix(`/api`) || PathPrefix(`/dashboard`))"
+                middlewares = [{
+                    name = "tinyauth"
+                }]
                 services = [{
                     kind = "TraefikService"
                     name = "api@internal"
@@ -61,7 +84,7 @@ resource "kubernetes_manifest" "traefik_dashboard_service" {
         }
     }
 
-    depends_on = [ kubernetes_manifest.traefik_dashboard_config ]
+    depends_on = [ kubernetes_manifest.traefik_dashboard_config, kubernetes_manifest.tinyauth_middleware_traefik ]
 }
 
 resource "technitium_dns_zone_record" "traefik_cdklein" {

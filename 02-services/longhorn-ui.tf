@@ -32,6 +32,9 @@ resource kubernetes_manifest "longhorn_ui_ingressroute" {
             routes = [{
                 kind  = "Rule"
                 match = "Host(`longhorn.cdklein.com`)"
+                middlewares = [{
+                    name = "tinyauth"
+                }]
                 services = [{
                     kind = "Service"
                     name = "longhorn-frontend"
@@ -43,6 +46,26 @@ resource kubernetes_manifest "longhorn_ui_ingressroute" {
             }
         }
     }
+}
+
+# TinyAuth middleware for longhorn-system namespace
+resource "kubernetes_manifest" "tinyauth_middleware_longhorn" {
+  manifest = {
+    apiVersion = "traefik.io/v1alpha1"
+    kind       = "Middleware"
+    metadata = {
+      name      = "tinyauth"
+      namespace = "longhorn-system"
+    }
+    spec = {
+      forwardAuth = {
+        address = "http://tinyauth.default.svc.cluster.local:3000/api/auth/traefik"
+        authResponseHeaders = [
+          "X-Forwarded-User"
+        ]
+      }
+    }
+  }
 }
 
 resource "technitium_dns_zone_record" "longhorn_cdklein" {
