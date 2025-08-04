@@ -62,6 +62,35 @@ resource "kubernetes_manifest" "tinyauth_deployment" {
               {
                 name  = "BACKGROUND_IMAGE"
                 value = "https://static.cdklein.com/background.jpg"
+              },
+              # OAuth integration with Pocket ID
+              {
+                name  = "GENERIC_CLIENT_ID"
+                value = var.tinyauth_oauth_client_id
+              },
+              {
+                name  = "GENERIC_CLIENT_SECRET"
+                value = var.tinyauth_oauth_client_secret
+              },
+              {
+                name  = "GENERIC_AUTH_URL"
+                value = "https://pocketid.cdklein.com/authorize"
+              },
+              {
+                name  = "GENERIC_TOKEN_URL"
+                value = "https://pocketid.cdklein.com/api/oidc/token"
+              },
+              {
+                name  = "GENERIC_USER_URL"
+                value = "https://pocketid.cdklein.com/api/oidc/userinfo"
+              },
+              {
+                name  = "GENERIC_SCOPES"
+                value = "openid email profile groups"
+              },
+              {
+                name  = "GENERIC_NAME"
+                value = "Pocket ID"
               }
             ]
           }]
