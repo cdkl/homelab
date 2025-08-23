@@ -63,6 +63,7 @@ resource "kubernetes_manifest" "tinyauth_middleware_longhorn" {
         authResponseHeaders = [
           "X-Forwarded-User"
         ]
+        trustForwardHeader = true
       }
     }
   }
@@ -73,5 +74,5 @@ resource "technitium_dns_zone_record" "longhorn_cdklein" {
   domain     = "longhorn.${technitium_dns_zone.cdklein.name}"
   type       = "A"
   ttl        = 300
-  ip_address = data.terraform_remote_state.cluster.outputs.k3s_master_ip
+  ip_address = "192.168.101.233"  # Traefik IP for IngressRoute routing
 }

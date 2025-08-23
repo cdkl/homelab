@@ -11,6 +11,7 @@ This stage deploys individual applications with associated Kubernetes resources:
 ### Deployed Services
 - **BirdNet-Go** (`birdnet-go.tf`): Bird identification service on Proxmox storage
 - **KegServe** (`kegserve.tf`): Rails-based personal keg management
+- **FoundryVTT** (`foundryvtt.tf`): Self-hosted virtual tabletop with persistent configuration
 - **Traefik Dashboard** (`traefik-dashboard.tf`): Ingress management UI with TinyAuth SSO
 - **TinyAuth** (`tinyauth.tf`): SSO authentication service for protected resources
 - **TinyAuth Middleware** (`tinyauth-middleware.tf`): ForwardAuth middleware for Traefik
@@ -184,3 +185,178 @@ kubectl describe certificate tinyauth-letsencrypt-cert -n default
 - Storage via Longhorn, with regular NFS backups
 - TinyAuth requires proper user configuration via Terraform variables
 - Static assets server allows customization of TinyAuth appearance
+
+## FoundryVTT Virtual Tabletop
+
+### Overview
+- **Service**: Self-hosted FoundryVTT virtual tabletop for D&D and other RPGs
+- **Domain**: foundryvtt.cdklein.com
+- **Container**: felddy/foundryvtt:release
+- **Deployment Type**: StatefulSet (for persistence and single-instance requirement)
+- **Port**: 30000 (internal), 443 (external via HTTPS)
+
+### Architecture Components
+
+#### 1. StatefulSet Deployment (`foundryvtt.tf`)
+- **Replicas**: 1 (FoundryVTT requires single instance)
+- **Container**: felddy/foundryvtt:release
+- **Resources**: 1Gi-2Gi RAM, 500m-2 CPU
+- **Security Context**: Runs as user 1000:1000 for proper file permissions
+- **Health Checks**: HTTP probes on port 30000 with extended timeouts
+
+#### 2. Persistent Storage
+- **Primary Data Volume**: 2Gi Longhorn PVC (`foundryvtt-data-pvc`)
+  - Mount Point: `/data`
+  - Contains: Worlds, modules, assets, configurations
+- **Application Cache Volume**: 1Gi Longhorn PVC (`foundryvtt-app-pvc`)
+  - Mount Points: `/home/node/.cache`, `/home/node/.local`, `/tmp`
+  - Contains: Application state, temporary files, session data
+
+#### 3. Configuration Management
+- **Environment Variables**:
+  ```env
+  FOUNDRY_USERNAME=<license_username>
+  FOUNDRY_PASSWORD=<license_password>
+  FOUNDRY_RELEASE_URL=<timed_download_url>
+  FOUNDRY_ADMIN_KEY=<admin_access_key>
+  FOUNDRY_PROXY_SSL=true
+  FOUNDRY_PROXY_PORT=443
+  CONTAINER_PRESERVE_CONFIG=true
+  ```
+- **Persistent Config Files**:
+  - `/data/Config/options.json`: Server settings
+  - `/data/Config/admin.txt`: Admin access key (hashed)
+  - `/data/Config/license.json`: Software license information
+
+#### 4. Network Configuration
+- **Service**: ClusterIP on port 30000
+- **IngressRoute**: Traefik with automatic HTTPS
+- **Certificate**: Let's Encrypt for foundryvtt.cdklein.com
+- **DNS Record**: A record pointing to k3s master IP
+
+### Required Terraform Variables
+```hcl
+# In terraform.tfvars
+foundryvtt_username = "your-foundry-username"
+foundryvtt_password = "your-foundry-password"
+foundryvtt_release_url = "https://r2.foundryvtt.com/releases/..." # From FoundryVTT account
+foundryvtt_admin_key = "your-admin-access-key"
+```
+
+### Deployment Process
+1. **Prerequisites**:
+   - Valid FoundryVTT license
+   - Fresh download URL from FoundryVTT account (URLs expire!)
+   - Sufficient storage space (6Gi total across 3 Longhorn replicas)
+
+2. **Configuration**:
+   - Set Terraform variables in `terraform.tfvars`
+   - Apply with `terraform apply`
+
+3. **First Startup**:
+   - Container downloads FoundryVTT from release URL
+   - Creates admin access key in `/data/Config/admin.txt`
+   - Generates initial configuration files
+
+### Persistence Strategy
+
+#### Why StatefulSet vs Deployment?
+- **Single Instance Requirement**: FoundryVTT cannot run multiple instances
+- **Persistent Identity**: StatefulSet provides stable pod naming (`foundryvtt-0`)
+- **Ordered Deployment**: Ensures single pod recreation on restart
+- **Configuration Persistence**: Prevents configuration loss between restarts
+
+#### Key Persistence Features
+1. **Configuration Preservation**: `CONTAINER_PRESERVE_CONFIG=true` prevents overwriting
+2. **Admin Key Persistence**: Admin access key survives pod restarts
+3. **World Data**: All worlds, modules, and assets persist across restarts
+4. **Server Settings**: User-configured server settings maintained
+
+### Management Operations
+
+#### Server Restart
+```bash
+# Clean restart - preserves all data and configuration
+kubectl delete pod foundryvtt-0
+
+# StatefulSet automatically recreates the pod
+kubectl get pods -l app=foundryvtt
+```
+
+#### Configuration Access
+- **Web Interface**: https://foundryvtt.cdklein.com
+- **Admin Access**: Use the configured `foundryvtt_admin_key`
+- **First Setup**: If no admin key, container warns in logs
+
+#### Storage Management
+```bash
+# Check storage usage
+kubectl exec foundryvtt-0 -- df -h /data
+
+# View persistent volumes
+kubectl get pvc | grep foundryvtt
+
+# Check Longhorn volume status
+kubectl get volumes.longhorn.io -n longhorn-system
+```
+
+### Troubleshooting
+
+#### Common Issues
+1. **Pod Stuck in ContainerCreating**:
+   - Check storage availability: Longhorn needs 3x volume size across nodes
+   - Verify PVC binding: `kubectl get pvc foundryvtt-data-pvc`
+   - Check Longhorn volume status in UI
+
+2. **Download Failures (403 Errors)**:
+   - FoundryVTT download URLs expire after ~1 hour
+   - Get fresh URL from FoundryVTT account
+   - Update `foundryvtt_release_url` variable and reapply
+
+3. **Configuration Not Persisting**:
+   - Verify `CONTAINER_PRESERVE_CONFIG=true` is set
+   - Check admin.txt file exists: `kubectl exec foundryvtt-0 -- ls -la /data/Config/`
+   - Ensure proper file permissions (user 1000:1000)
+
+4. **License Issues**:
+   - Verify license credentials in Terraform variables
+   - Check container logs for authentication errors
+   - Ensure FoundryVTT account has available license slots
+
+#### Debug Commands
+```bash
+# Check pod status and logs
+kubectl get pods -l app=foundryvtt
+kubectl logs foundryvtt-0 --tail=50
+
+# Check persistent volumes
+kubectl get pvc | grep foundryvtt
+kubectl describe pvc foundryvtt-data-pvc
+
+# Shell into container for file inspection
+kubectl exec -it foundryvtt-0 -- /bin/bash
+
+# Check configuration files
+kubectl exec foundryvtt-0 -- ls -la /data/Config/
+kubectl exec foundryvtt-0 -- cat /data/Config/options.json
+
+# Monitor Longhorn volumes
+kubectl get volumes.longhorn.io -n longhorn-system
+```
+
+### Storage Considerations
+- **Volume Size**: 2Gi data + 1Gi cache = 3Gi per pod
+- **Replication**: Longhorn creates 3 replicas = 9Gi total storage needed
+- **Available Space**: Ensure sufficient space across worker nodes
+- **Backup**: Longhorn automatically backs up to NFS (lorez.cdklein.com)
+
+### Security Notes
+- **Admin Key**: Stored securely in Terraform variables (sensitive = true)
+- **HTTPS Only**: All traffic encrypted via Traefik and Let's Encrypt
+- **Internal Network**: Service only accessible via cluster network
+- **License Credentials**: Stored in Kubernetes secrets
+
+### Performance Tuning
+- **Resource Limits**: Adjust CPU/memory limits based on player count
+- **Storage Class**: Uses Longhorn for distributed storage and backup
+- **Network**: Optimized for SSL termination at Traefik level

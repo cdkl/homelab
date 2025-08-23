@@ -13,6 +13,8 @@ resource "proxmox_vm_qemu" "k3s-master" {
     cores    = 2
     memory   = 4096
     sockets  = 1
+    onboot = true
+    startup = "order=1"
 
     # Cloud-Init configuration
     cicustom   = "vendor=local:snippets/user-data.yml" # /var/lib/vz/snippets/user-data.yml
@@ -94,6 +96,8 @@ resource "proxmox_vm_qemu" "k3s-worker" {
     memory   = 3072
     sockets  = 1
     scsihw   = "virtio-scsi-single"
+    onboot = true
+    startup = "order=2"
 
     # Cloud-Init configuration
     cicustom   = "vendor=local:snippets/user-data.yml" # /var/lib/vz/snippets/user-data.yml

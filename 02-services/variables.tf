@@ -20,3 +20,27 @@ variable "tinyauth_oauth_client_secret" {
   sensitive   = true
 }
 
+variable "foundryvtt_username" {
+  description = "FoundryVTT license username"
+  type        = string
+  sensitive   = true
+}
+
+variable "foundryvtt_password" {
+  description = "FoundryVTT license password"
+  type        = string
+  sensitive   = true
+}
+
+variable "foundryvtt_release_url" {
+  description = "FoundryVTT release download URL (from your licensed account)"
+  type        = string
+  sensitive   = true
+}
+
+variable "foundryvtt_admin_key" {
+  description = "FoundryVTT admin access key for server configuration"
+  type        = string
+  sensitive   = true
+}
+

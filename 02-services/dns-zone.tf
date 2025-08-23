@@ -17,7 +17,7 @@ resource "technitium_dns_zone_record" "dns_cdklein" {
   domain     = "dns.${technitium_dns_zone.cdklein.name}"
   type       = "A"
   ttl        = 300
-  ip_address = "192.168.101.233"
+  ip_address = "192.168.101.243"
 }
 
 resource "technitium_dns_zone_record" "homeassistant_cdklein" {

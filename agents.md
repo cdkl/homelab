@@ -45,8 +45,8 @@ homelab/
 ### Network Configuration
 - **Domain**: cdklein.com (managed by Technitium DNS)
 - **MetalLB Pool**: 192.168.101.233-243
-- **DNS Server**: 192.168.101.233 (Technitium LoadBalancer)
-- **Traefik LoadBalancer**: 192.168.101.234
+- **DNS Server**: 192.168.101.243 (Technitium LoadBalancer)
+- **Traefik LoadBalancer**: 192.168.101.233
 
 ### Storage & Backup
 - **Primary**: Longhorn distributed storage (default storage class)
@@ -78,6 +78,12 @@ homelab/
    - Personal keg management application
    - Rails app with Longhorn persistent storage
    - Uses Rails master key from Kubernetes secret
+
+3. **FoundryVTT** (foundryvtt.cdklein.com)
+   - Self-hosted virtual tabletop for D&D and other RPGs
+   - StatefulSet deployment with persistent configuration
+   - Dual-volume setup for data and application state
+   - Admin access key authentication
 
 ## Authentication & Security
 
@@ -156,6 +162,7 @@ All services are available via HTTPS at their respective subdomains:
 - https://longhorn-ui.cdklein.com (Storage management)
 - https://birdnet-go.cdklein.com (Bird identification)
 - https://kegserve.cdklein.com (Keg management)
+- https://foundryvtt.cdklein.com (Virtual tabletop gaming)
 
 ### Kubernetes Access
 ```bash

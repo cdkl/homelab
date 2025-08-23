@@ -176,5 +176,5 @@ resource "technitium_dns_zone_record" "pocketid_cdklein" {
   domain     = "pocketid.${technitium_dns_zone.cdklein.name}"
   type       = "A"
   ttl        = 300
-  ip_address = "192.168.101.234"
+  ip_address = "192.168.101.233"
 }

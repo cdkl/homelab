@@ -167,7 +167,7 @@ resource "kubernetes_service" "technitium" {
     name      = "technitium"
     namespace = kubernetes_namespace.dns.metadata[0].name
     annotations = {
-      "metallb.universe.tf/loadBalancerIPs" = "192.168.101.233"  # First IP in our safe range
+      "metallb.universe.tf/loadBalancerIPs" = "192.168.101.243"  # First IP in our safe range
     }
   }
 
@@ -198,6 +198,31 @@ resource "kubernetes_service" "technitium" {
     }
   }
 }
+
+resource "kubernetes_manifest" "technitium_ui_ingress_dns" {
+  manifest = {
+    apiVersion = "traefik.io/v1alpha1"
+    kind       = "IngressRoute"
+
+    metadata = {
+      namespace = "dns"
+      name      = "technitium-ui-dns"
+    }
+    spec = {
+      entryPoints = ["web"]
+      routes = [{
+        kind  = "Rule"
+        match = "Host(`dns.cdklein.com`)"
+        services = [{
+          kind = "Service"
+          name = "technitium"
+          port = 80
+        }]
+      }]
+    }
+  }
+}
+
 
 output "technitium_admin_password" {
   value = var.technitium_admin_password
