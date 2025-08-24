@@ -259,7 +259,7 @@ resource "kubernetes_manifest" "foundryvtt_letsencrypt_certificate" {
   }
 }
 
-# Traefik IngressRoute for FoundryVTT
+# Traefik IngressRoute for FoundryVTT with TinyAuth authentication
 resource "kubernetes_manifest" "foundryvtt_ingressroute" {
   manifest = {
     apiVersion = "traefik.io/v1alpha1"
@@ -275,6 +275,9 @@ resource "kubernetes_manifest" "foundryvtt_ingressroute" {
       routes = [{
         kind  = "Rule"
         match = "Host(`foundryvtt.cdklein.com`)"
+        middlewares = [{
+          name = "tinyauth"
+        }]
         services = [{
           kind = "Service"
           name = "foundryvtt-service"
@@ -288,7 +291,8 @@ resource "kubernetes_manifest" "foundryvtt_ingressroute" {
   }
 
   depends_on = [
-    kubernetes_manifest.foundryvtt_statefulset
+    kubernetes_manifest.foundryvtt_statefulset,
+    kubernetes_manifest.tinyauth_middleware
   ]
 }
 

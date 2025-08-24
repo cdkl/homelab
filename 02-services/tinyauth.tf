@@ -78,11 +78,11 @@ resource "kubernetes_manifest" "tinyauth_deployment" {
               },
               {
                 name  = "GENERIC_TOKEN_URL"
-                value = "https://pocketid.cdklein.com/api/oidc/token"
+                value = "http://pocketid.default.svc.cluster.local:1411/api/oidc/token"
               },
               {
                 name  = "GENERIC_USER_URL"
-                value = "https://pocketid.cdklein.com/api/oidc/userinfo"
+                value = "http://pocketid.default.svc.cluster.local:1411/api/oidc/userinfo"
               },
               {
                 name  = "GENERIC_SCOPES"
