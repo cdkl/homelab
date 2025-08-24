@@ -25,13 +25,16 @@ homelab/
 │   ├── metallb.tf       # Load balancer configuration
 │   ├── longhorn.tf      # Distributed storage
 │   └── cloud-init/      # VM initialization configs
-└── 02-services/         # Stage 2: Applications and services
-    ├── agents.md        # Stage 2 specific context and operations
-    ├── birdnet-go.tf    # Bird identification service
-    ├── kegserve.tf      # Personal keg management app
-    ├── traefik-dashboard.tf # Ingress controller UI
-    ├── dns-zone.tf      # DNS records for all services
-    └── kubernetes/      # Static Kubernetes manifests
+├── 02-services/         # Stage 2: Applications and services
+│   ├── agents.md        # Stage 2 specific context and operations
+│   ├── birdnet-go.tf    # Bird identification service
+│   ├── kegserve.tf      # Personal keg management app
+│   ├── traefik-dashboard.tf # Ingress controller UI
+│   ├── dns-zone.tf      # DNS records for all services
+│   └── kubernetes/      # Static Kubernetes manifests
+└── scripts/             # Management and utility scripts
+    ├── agents.md        # Scripts documentation and usage guides
+    └── tunnel-toggle.sh # Cloudflare Tunnel on/off control script
 ```
 
 ## Key Infrastructure Components
@@ -83,7 +86,8 @@ homelab/
    - Self-hosted virtual tabletop for D&D and other RPGs
    - StatefulSet deployment with persistent configuration
    - Dual-volume setup for data and application state
-   - Admin access key authentication
+   - TinyAuth SSO protection for external access
+   - Available both internally and externally via Cloudflare Tunnel
 
 ## Authentication & Security
 
@@ -93,7 +97,7 @@ homelab/
 - **Authentication Method**: ForwardAuth middleware integration with Traefik
 - **Session Management**: HTTP-only secure cookies with 7-day expiry
 - **User Storage**: Local users with bcrypt password hashing
-- **Protected Services**: Traefik Dashboard, Longhorn UI
+- **Protected Services**: Traefik Dashboard, Longhorn UI, FoundryVTT
 
 #### TinyAuth Configuration
 - **Environment Variables**:
@@ -128,6 +132,11 @@ homelab/
    - Domain: longhorn.cdklein.com
    - Namespace: `longhorn-system`
 
+3. **FoundryVTT**:
+   - IngressRoute with `tinyauth` middleware
+   - Domain: foundryvtt.cdklein.com
+   - Namespace: `default`
+
 ### Certificates
 - **Issuer**: Let's Encrypt via Cloudflare DNS-01 challenges
 - **ClusterIssuer**: `letsencrypt-cloudflare`
@@ -147,6 +156,43 @@ homelab/
 - Rails master key for KegServe
 - TinyAuth secret key (randomly generated)
 - TinyAuth user credentials (bcrypt hashed)
+- Cloudflare Tunnel token (for external access)
+
+## External Access
+
+### Cloudflare Tunnel
+- **Service**: Cloudflared daemon for secure external access
+- **Container**: cloudflare/cloudflared:latest
+- **Configuration**: Token-based authentication (no certificates needed)
+- **Exposed Services**: FoundryVTT, TinyAuth, PocketID, Static Assets
+- **Control Script**: `./scripts/tunnel-toggle.sh` for easy on/off management
+- **Security**: No firewall ports opened, all traffic encrypted via Cloudflare
+- **Monitoring**: Internal metrics available at `https://tunnel-metrics.cdklein.com/metrics`
+
+#### Tunnel Management
+```bash
+# Turn external access ON
+./scripts/tunnel-toggle.sh on
+
+# Turn external access OFF  
+./scripts/tunnel-toggle.sh off
+
+# Check tunnel status
+./scripts/tunnel-toggle.sh status
+
+# Quick kubectl methods
+kubectl scale deployment cloudflare-tunnel --replicas=1  # ON
+kubectl scale deployment cloudflare-tunnel --replicas=0  # OFF
+```
+
+#### External URL Access
+When tunnel is enabled, these services are accessible externally:
+- **FoundryVTT**: `https://foundryvtt.cdklein.com` (TinyAuth protected)
+- **TinyAuth**: `https://auth.cdklein.com` (authentication portal)
+- **PocketID**: `https://pocketid.cdklein.com` (OAuth provider)
+- **Static Assets**: `https://static.cdklein.com` (background images)
+
+**Note**: External access requires setting up DNS records in Cloudflare dashboard to point to the tunnel.
 
 ## Remote State Management
 - **Backend**: PostgreSQL on lorez.local:15432
@@ -173,6 +219,13 @@ sed -i "s/127.0.0.1/<master-ip>/g" ~/.kube/config
 
 ### DNS Records
 All service DNS records are automatically managed via the Technitium provider, pointing to appropriate LoadBalancer IPs or the master node IP.
+
+### Management Scripts
+Utility scripts for common operations are available in the `scripts/` directory. See `scripts/agents.md` for detailed documentation.
+
+**Key Scripts**:
+- `scripts/tunnel-toggle.sh` - Control Cloudflare Tunnel external access (on/off/status)
+- Future scripts for backup management, certificate renewal, and cluster health checks
 
 ## Important Notes
 - Stage 01 must be fully deployed before Stage 02 (services depend on cluster state)

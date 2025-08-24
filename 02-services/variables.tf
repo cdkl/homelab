@@ -60,3 +60,21 @@ variable "pocketid_api_key" {
   type        = string
   sensitive   = true
 }
+
+variable "cloudflare_tunnel_token" {
+  description = "Cloudflare Tunnel token (obtained from Cloudflare dashboard)"
+  type        = string
+  sensitive   = true
+}
+
+variable "external_domain" {
+  description = "External domain for public access (e.g., yourdomain.com)"
+  type        = string
+  default     = "cdklein.com"
+}
+
+variable "tunnel_enabled" {
+  description = "Enable or disable the Cloudflare tunnel"
+  type        = bool
+  default     = true
+}

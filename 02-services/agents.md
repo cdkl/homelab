@@ -11,7 +11,8 @@ This stage deploys individual applications with associated Kubernetes resources:
 ### Deployed Services
 - **BirdNet-Go** (`birdnet-go.tf`): Bird identification service on Proxmox storage
 - **KegServe** (`kegserve.tf`): Rails-based personal keg management
-- **FoundryVTT** (`foundryvtt.tf`): Self-hosted virtual tabletop with persistent configuration
+- **FoundryVTT** (`foundryvtt.tf`): Self-hosted virtual tabletop with TinyAuth SSO protection
+- **Cloudflare Tunnel** (`cloudflare-tunnel.tf`): Secure external access with controllable on/off toggle
 - **Traefik Dashboard** (`traefik-dashboard.tf`): Ingress management UI with TinyAuth SSO
 - **TinyAuth** (`tinyauth.tf`): SSO authentication service for protected resources
 - **TinyAuth Middleware** (`tinyauth-middleware.tf`): ForwardAuth middleware for Traefik
@@ -67,7 +68,7 @@ Services require access to:
 - **Service**: TinyAuth v3 container providing lightweight SSO
 - **Domain**: auth.cdklein.com
 - **Integration**: Traefik ForwardAuth middleware
-- **Purpose**: Protect sensitive infrastructure services (Traefik Dashboard, Longhorn UI)
+- **Purpose**: Protect sensitive infrastructure services (Traefik Dashboard, Longhorn UI, FoundryVTT)
 
 ### Architecture Components
 
