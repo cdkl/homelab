@@ -44,3 +44,19 @@ variable "foundryvtt_admin_key" {
   sensitive   = true
 }
 
+variable "pocketid_client_id" {
+  description = "PocketID OIDC client ID for oauth2-proxy"
+  type        = string
+}
+
+variable "pocketid_client_secret" {
+  description = "PocketID OIDC client secret for oauth2-proxy"
+  type        = string
+  sensitive   = true
+}
+
+variable "pocketid_api_key" {
+  description = "PocketID API key for accessing PocketID services"
+  type        = string
+  sensitive   = true
+}

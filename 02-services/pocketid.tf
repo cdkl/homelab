@@ -66,12 +66,12 @@ resource "kubernetes_manifest" "pocketid_deployment" {
               },
               {
                 name  = "DATABASE_CONNECTION_STRING"
-                value = "file:/data/pocket-id.db?_pragma=journal_mode(WAL)&_pragma=busy_timeout(2500)&_txlock=immediate"
+                value = "file:/app/data/pocket-id.db?_pragma=journal_mode(WAL)&_pragma=busy_timeout(2500)&_txlock=immediate"
               }
             ]
             volumeMounts = [{
               name      = "data"
-              mountPath = "/data"
+              mountPath = "/app/data"
             }]
             livenessProbe = {
               httpGet = {

@@ -24,7 +24,7 @@ resource "kubernetes_persistent_volume_claim" "foundryvtt_data" {
     access_modes = ["ReadWriteOnce"]
     resources {
       requests = {
-        storage = "2Gi"  # Reduced to fit available storage with 3 replicas
+        storage = "4Gi"  # For game worlds, assets, modules, etc.
       }
     }
     storage_class_name = data.terraform_remote_state.cluster.outputs.longhorn_storage_class
@@ -42,7 +42,7 @@ resource "kubernetes_persistent_volume_claim" "foundryvtt_app" {
     access_modes = ["ReadWriteOnce"]
     resources {
       requests = {
-        storage = "1Gi"  # For application configs, logs, cache
+        storage = "2Gi"  # For application configs, logs, cache
       }
     }
     storage_class_name = data.terraform_remote_state.cluster.outputs.longhorn_storage_class

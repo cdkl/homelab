@@ -34,7 +34,7 @@ resource "proxmox_vm_qemu" "k3s-master" {
         scsi {
             scsi0 {
                 disk {
-                    size = "20G"
+                    size = "50G"
                     storage = "local-lvm"
                 }
             }
@@ -84,7 +84,7 @@ output "kubeconfig_command" {
 }
 
 resource "proxmox_vm_qemu" "k3s-worker" {
-    count       = 2
+    count       = 1
     name        = "k3s-worker-${count.index + 1}"
     target_node = var.proxmox_node
     clone       = "ubuntu-24-04-template"
@@ -115,7 +115,7 @@ resource "proxmox_vm_qemu" "k3s-worker" {
         scsi {
             scsi0 {
                 disk {
-                    size    = "20G"
+                    size    = "50G"
                     storage = "local-lvm"
                 }
             }
