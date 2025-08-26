@@ -32,6 +32,8 @@ homelab/
 │   ├── traefik-dashboard.tf # Ingress controller UI
 │   ├── dns-zone.tf      # DNS records for all services
 │   └── kubernetes/      # Static Kubernetes manifests
+├── docs/                # Detailed topic-specific documentation
+│   └── dns-and-certificates.md # DNS architecture and cert-manager setup
 └── scripts/             # Management and utility scripts
     ├── agents.md        # Scripts documentation and usage guides
     └── tunnel-toggle.sh # Cloudflare Tunnel on/off control script
@@ -137,12 +139,19 @@ homelab/
    - Domain: foundryvtt.cdklein.com
    - Namespace: `default`
 
-### Certificates
+### Certificates & DNS Architecture
 - **Issuer**: Let's Encrypt via Cloudflare DNS-01 challenges
-- **ClusterIssuer**: `letsencrypt-cloudflare`
+- **ClusterIssuer**: `letsencrypt-cloudflare` 
 - **Domains**: All services get automatic *.cdklein.com certificates
-- **TinyAuth TLS**: Certificate for auth.cdklein.com
-- **Static Assets TLS**: Certificate for static.cdklein.com
+- **Special DNS Configuration**: Cert-manager uses Cloudflare DNS directly (1.1.1.1, 1.0.0.1) for validation
+- **DNS Resolution Architecture**:
+  - **Local services**: CoreDNS → Technitium DNS → Local zone records
+  - **Certificate validation**: Cert-manager → Cloudflare DNS (bypassing cluster DNS)
+  - **External domains**: CoreDNS → Technitium → Cloudflare DNS forwarders
+
+**Critical DNS Setup**: The cert-manager pods are configured with `dnsPolicy: None` and custom nameservers to bypass local DNS resolution issues. This ensures reliable certificate issuance by allowing cert-manager to query Cloudflare's authoritative nameservers directly while maintaining local DNS service resolution for all other cluster components.
+
+**See**: `docs/dns-and-certificates.md` for comprehensive DNS architecture and troubleshooting documentation.
 
 ### SSH Access
 - **User**: ubuntu (on all VMs)
