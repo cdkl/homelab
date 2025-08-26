@@ -14,14 +14,31 @@ resource "kubernetes_config_map" "technitium_init" {
     "init-config.json" = jsonencode({
       forwarders = [
         {
-          address = "192.168.101.1",
+          address = "1.1.1.1",
           port    = 53,
           type    = "Udp"
         },
         {
-          address = "1.1.1.1",
+          address = "1.0.0.1",
           port    = 53,
           type    = "Udp"
+        }
+      ],
+      conditionalForwarders = [
+        {
+          zone = "cdklein.com",
+          forwarders = [
+            {
+              address = "piotr.ns.cloudflare.com",
+              port    = 53,
+              type    = "Udp"
+            },
+            {
+              address = "fay.ns.cloudflare.com",
+              port    = 53,
+              type    = "Udp"
+            }
+          ]
         }
       ],
       zones = [

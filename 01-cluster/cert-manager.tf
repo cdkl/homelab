@@ -15,6 +15,23 @@ resource "helm_release" "cert_manager" {
     name  = "installCRDs"
     value = "true"
   }
+
+  # Configure cert-manager to use Cloudflare DNS servers for DNS validation
+  # This bypasses local DNS issues and queries Cloudflare directly
+  set {
+    name  = "podDnsPolicy"
+    value = "None"
+  }
+  
+  set {
+    name  = "podDnsConfig.nameservers[0]"
+    value = "1.1.1.1"
+  }
+  
+  set {
+    name  = "podDnsConfig.nameservers[1]"
+    value = "1.0.0.1"
+  }
 }
 
 # Cloudflare API token secret
