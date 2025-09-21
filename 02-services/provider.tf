@@ -18,7 +18,7 @@ provider "kubernetes" {
 }
 
 provider "technitium" {
-  host  = "http://dns.cdklein.com"
+  host  = "http://dns.cdklein.com:8080"
   username = "admin"
   password = data.terraform_remote_state.cluster.outputs.technitium_admin_password
 }

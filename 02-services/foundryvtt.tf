@@ -24,7 +24,7 @@ resource "kubernetes_persistent_volume_claim" "foundryvtt_data" {
     access_modes = ["ReadWriteOnce"]
     resources {
       requests = {
-        storage = "4Gi"  # For game worlds, assets, modules, etc.
+        storage = "12Gi"  # For game worlds, assets, modules, etc.
       }
     }
     storage_class_name = data.terraform_remote_state.cluster.outputs.longhorn_storage_class
@@ -60,7 +60,7 @@ resource "kubernetes_manifest" "foundryvtt_statefulset" {
       namespace = "default"
     }
     spec = {
-      replicas = 1
+      replicas = 0  # Scaled down - FoundryVTT transitioned to VM
       selector = {
         matchLabels = {
           app = "foundryvtt"
@@ -157,24 +157,13 @@ resource "kubernetes_manifest" "foundryvtt_statefulset" {
 
             resources = {
               requests = {
-                memory = "1Gi"
+                memory = "2Gi"
                 cpu    = "500m"
               }
               limits = {
-                memory = "2Gi"
+                memory = "3Gi"
                 cpu    = "2"
               }
-            }
-
-            livenessProbe = {
-              httpGet = {
-                path = "/"
-                port = 30000
-              }
-              initialDelaySeconds = 300  # FoundryVTT can take time to start up
-              periodSeconds       = 30
-              timeoutSeconds      = 10
-              failureThreshold    = 3
             }
 
             readinessProbe = {
@@ -183,8 +172,20 @@ resource "kubernetes_manifest" "foundryvtt_statefulset" {
                 port = 30000
               }
               initialDelaySeconds = 60
-              periodSeconds       = 10
-              timeoutSeconds      = 5
+              periodSeconds       = 60
+              timeoutSeconds      = 30
+              failureThreshold    = 30
+            }
+            
+            livenessProbe = {
+              httpGet = {
+                path = "/"
+                port = 30000
+              }
+              initialDelaySeconds = 300    # 5 minutes before first check
+              periodSeconds       = 60     # Check every minute
+              timeoutSeconds      = 30     # 30 second timeout per check
+              failureThreshold    = 30     # Allow 30 failures = 30 minutes of downtime
             }
           }]
 
@@ -296,13 +297,13 @@ resource "kubernetes_manifest" "foundryvtt_ingressroute" {
   ]
 }
 
-# DNS record for FoundryVTT - points to Traefik for IngressRoute routing (Cloudflare Tunnel will connect here)
+# DNS record for FoundryVTT - points to VM directly (transitioned from K3s to VM)
 resource "technitium_dns_zone_record" "foundryvtt_cdklein" {
   zone       = technitium_dns_zone.cdklein.name
   domain     = "foundryvtt.${technitium_dns_zone.cdklein.name}"
   type       = "A"
   ttl        = 300
-  ip_address = "192.168.101.233"  # Traefik's IP for IngressRoute routing
+  ip_address = data.terraform_remote_state.cluster.outputs.foundryvtt_ip  # VM IP from Stage 1
 }
 
 output "foundryvtt_statefulset_name" {

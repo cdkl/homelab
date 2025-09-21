@@ -209,7 +209,7 @@ resource "kubernetes_service" "technitium" {
     }
 
     port {
-      port        = 80
+      port        = 8080
       target_port = 5380
       name        = "web"
     }
@@ -233,7 +233,7 @@ resource "kubernetes_manifest" "technitium_ui_ingress_dns" {
         services = [{
           kind = "Service"
           name = "technitium"
-          port = 80
+          port = 8080
         }]
       }]
     }
