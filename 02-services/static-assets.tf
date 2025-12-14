@@ -167,10 +167,3 @@ resource "kubernetes_manifest" "static_assets_ingressroute" {
   }
 }
 
-resource "technitium_dns_zone_record" "static_cdklein" {
-  zone       = technitium_dns_zone.cdklein.name
-  domain     = "static.${technitium_dns_zone.cdklein.name}"
-  type       = "A"
-  ttl        = 300
-  ip_address = "192.168.101.233"  # Traefik IP for IngressRoute routing
-}

@@ -103,6 +103,18 @@ The dual DNS approach solves a critical problem:
 **For detailed DNS troubleshooting and architecture diagrams**, see `../docs/dns-and-certificates.md`
 
 ### Troubleshooting
+
+#### First-time Pi-hole VM bootstrap
+- This Terraform path has not been fully validated from a clean slate; be prepared to intervene manually on first boot.
+- Checklist:
+  - Disable systemd-resolved and free port 53
+  - Ensure /etc/resolv.conf has public resolvers before starting Unbound
+  - Install ca-certificates and confirm tls-cert-bundle path in Unbound
+  - Verify Docker is installed/running; containers: unbound, pihole
+  - After Stage 2 applies, confirm dns.hosts via `docker exec pihole pihole-FTL --config dns.hosts`
+- Smoke tests:
+  - `nslookup www.google.com 192.168.101.100`
+  - `nslookup pihole.cdklein.com 192.168.101.100`
 - **VM creation fails**: Check Proxmox template and network config
 - **K3s installation fails**: Verify SSH keys and network connectivity
 - **DNS service not accessible**: Check MetalLB IP assignment

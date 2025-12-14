@@ -87,10 +87,3 @@ resource "kubernetes_manifest" "traefik_dashboard_service" {
     depends_on = [ kubernetes_manifest.traefik_dashboard_config, kubernetes_manifest.tinyauth_middleware_traefik ]
 }
 
-resource "technitium_dns_zone_record" "traefik_cdklein" {
-  zone       = technitium_dns_zone.cdklein.name
-  domain     = "traefik.${technitium_dns_zone.cdklein.name}"
-  type       = "A"
-  ttl        = 300
-  ip_address = "192.168.101.233"
-}

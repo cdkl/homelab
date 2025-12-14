@@ -35,15 +35,27 @@ Ensure Stage 1 outputs are accessible; the services.tf files reference master no
 ### Post-Deployment
 After successful apply:
 1. **Verify service access**:
-   ```bash
-   kubectl get pods -n default
-   kubectl get svc -n default
-   ```
+```bash
+kubectl get pods -n default
+kubectl get svc -n default
+```
 
-2. **Check services**:
-   - BirdNet-Go: http(s)://birdnet-go.cdklein.com
-   - KegServe: http(s)://kegserve.cdklein.com
-   - Traefik: http(s)://traefik.cdklein.com
+2. **Local DNS management (Pi-hole v6)**
+- Local overrides are applied via `pihole-FTL --config dns.hosts`/`dns.cnameRecords` by Terraform (see `pihole-local-dns.tf`).
+- To add or change a hostname, edit the host map in `pihole-local-dns.tf` (or extend `local.merged_hosts`) and run:
+```bash
+terraform plan
+terraform apply -target=null_resource.pihole_local_dns
+```
+- Validate:
+```bash
+nslookup pihole.cdklein.com 192.168.101.100
+```
+
+3. **Check services**:
+- BirdNet-Go: http(s)://birdnet-go.cdklein.com
+- KegServe: http(s)://kegserve.cdklein.com
+- Traefik: http(s)://traefik.cdklein.com
 
 ### Key Resources Created
 - **Pods/Deployments**: birdnet-go, kegserve

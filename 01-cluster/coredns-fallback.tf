@@ -24,7 +24,7 @@ resource "kubernetes_config_map_v1_data" "coredns_fallback" {
             fallthrough
           }
           prometheus :9153
-          forward . 192.168.101.243
+          forward . 192.168.101.100
           cache 30
           loop
           reload
@@ -43,7 +43,4 @@ resource "kubernetes_config_map_v1_data" "coredns_fallback" {
   force = true
 
   # Ensure this runs after the cluster is up and DNS service exists
-  depends_on = [
-    kubernetes_service.technitium
-  ]
 }

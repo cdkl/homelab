@@ -171,10 +171,3 @@ resource "kubernetes_manifest" "pocketid_ingressroute" {
   }
 }
 
-resource "technitium_dns_zone_record" "pocketid_cdklein" {
-  zone       = technitium_dns_zone.cdklein.name
-  domain     = "pocketid.${technitium_dns_zone.cdklein.name}"
-  type       = "A"
-  ttl        = 300
-  ip_address = "192.168.101.233"
-}

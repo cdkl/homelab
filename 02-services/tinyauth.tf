@@ -167,10 +167,3 @@ resource "kubernetes_manifest" "tinyauth_ingressroute" {
   }
 }
 
-resource "technitium_dns_zone_record" "auth_cdklein" {
-  zone       = technitium_dns_zone.cdklein.name
-  domain     = "auth.${technitium_dns_zone.cdklein.name}"
-  type       = "A"
-  ttl        = 300
-  ip_address = "192.168.101.233"
-}

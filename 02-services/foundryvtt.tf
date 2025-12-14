@@ -297,14 +297,6 @@ resource "kubernetes_manifest" "foundryvtt_ingressroute" {
   ]
 }
 
-# DNS record for FoundryVTT - points to VM directly (transitioned from K3s to VM)
-resource "technitium_dns_zone_record" "foundryvtt_cdklein" {
-  zone       = technitium_dns_zone.cdklein.name
-  domain     = "foundryvtt.${technitium_dns_zone.cdklein.name}"
-  type       = "A"
-  ttl        = 300
-  ip_address = data.terraform_remote_state.cluster.outputs.foundryvtt_ip  # VM IP from Stage 1
-}
 
 output "foundryvtt_statefulset_name" {
   value = kubernetes_manifest.foundryvtt_statefulset.manifest.metadata.name

@@ -82,6 +82,8 @@ server:
   qname-minimisation: yes
   hide-identity: yes
   hide-version: yes
+  tls-cert-bundle: /etc/ssl/certs/ca-certificates.crt
+  local-zone: "cdklein.com" transparent
 
 forward-zone:
   name: "."

@@ -69,10 +69,3 @@ resource "kubernetes_manifest" "tinyauth_middleware_longhorn" {
   }
 }
 
-resource "technitium_dns_zone_record" "longhorn_cdklein" {
-  zone       = technitium_dns_zone.cdklein.name
-  domain     = "longhorn.${technitium_dns_zone.cdklein.name}"
-  type       = "A"
-  ttl        = 300
-  ip_address = "192.168.101.233"  # Traefik IP for IngressRoute routing
-}

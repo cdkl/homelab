@@ -246,16 +246,7 @@ resource "kubernetes_manifest" "tunnel_metrics_ingressroute" {
   ]
 }
 
-# DNS record for tunnel metrics (internal only - not exposed via tunnel)
-resource "technitium_dns_zone_record" "tunnel_metrics_cdklein" {
-  count = var.tunnel_enabled ? 1 : 0
-  
-  zone       = technitium_dns_zone.cdklein.name
-  domain     = "tunnel-metrics.${var.external_domain}"
-  type       = "A"
-  ttl        = 300
-  ip_address = "192.168.101.233"  # Traefik IP for internal access only
-}
+# DNS record for tunnel metrics managed by Pi-hole local DNS (see pihole-local-dns.tf)
 
 # Output tunnel information
 output "tunnel_services" {

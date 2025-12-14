@@ -136,13 +136,6 @@ resource "kubernetes_manifest" "birdnet_go_ingressroute" {
   ]
 }
 
-resource "technitium_dns_zone_record" "birdnet_go_cdklein" {
-  zone       = technitium_dns_zone.cdklein.name
-  domain     = "birdnet-go.${technitium_dns_zone.cdklein.name}"
-  type       = "A"
-  ttl        = 300
-  ip_address =data.terraform_remote_state.cluster.outputs.k3s_master_ip
-}
 
 output "birdnet_go_pod_name" {
     value = kubernetes_pod.birdnet_go.metadata[0].name

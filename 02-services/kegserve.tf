@@ -174,13 +174,6 @@ resource kubernetes_manifest "kegserve_ingressroute" {
     ]
 }
 
-resource technitium_dns_zone_record "kegserve_cdklein" {
-  zone       = technitium_dns_zone.cdklein.name
-  domain     = "kegserve.${technitium_dns_zone.cdklein.name}"
-  type       = "A"
-  ttl        = 300
-  ip_address = data.terraform_remote_state.cluster.outputs.k3s_master_ip
-}
 
 output "kegserve_pod_name" {
     value = kubernetes_pod.kegserve.metadata[0].name

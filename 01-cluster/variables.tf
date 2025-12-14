@@ -30,12 +30,6 @@ variable "ssh_private_key_path" {
   type        = string
 }
 
-variable "technitium_admin_password" {
-  description = "Admin password for Technitium DNS server"
-  type        = string
-  sensitive   = true
-}
-
 variable "cloudflare_api_token" {
   description = "Cloudflare API token for DNS-01 challenges"
   type        = string
