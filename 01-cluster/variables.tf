@@ -47,3 +47,9 @@ variable "acme_email" {
   type        = string
   sensitive   = true
 }
+
+variable "pihole_admin_password" {
+  description = "Admin password for Pi-hole web UI"
+  type        = string
+  sensitive   = true
+}

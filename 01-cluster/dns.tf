@@ -101,6 +101,7 @@ resource "kubernetes_deployment" "technitium" {
       spec {
         container {
           image = "technitium/dns-server:latest"
+          image_pull_policy = "IfNotPresent"
           name  = "technitium"
 
           env {
@@ -240,6 +241,62 @@ resource "kubernetes_manifest" "technitium_ui_ingress_dns" {
   }
 }
 
+
+# DaemonSet to pre-pull Technitium image on all nodes
+# This ensures the image is cached even if DNS is unavailable during restarts
+resource "kubernetes_daemonset" "technitium_image_prepull" {
+  metadata {
+    name      = "technitium-image-prepull"
+    namespace = kubernetes_namespace.dns.metadata[0].name
+    labels = {
+      app = "technitium-prepull"
+    }
+  }
+
+  spec {
+    selector {
+      match_labels = {
+        app = "technitium-prepull"
+      }
+    }
+
+    template {
+      metadata {
+        labels = {
+          app = "technitium-prepull"
+        }
+      }
+
+      spec {
+        init_container {
+          name  = "image-prepull"
+          image = "technitium/dns-server:latest"
+          command = ["/bin/sh", "-c", "echo 'Image pulled successfully'"]
+        }
+
+        container {
+          name  = "pause"
+          image = "k8s.gcr.io/pause:3.9"
+          resources {
+            requests = {
+              cpu    = "10m"
+              memory = "10Mi"
+            }
+            limits = {
+              cpu    = "10m"
+              memory = "10Mi"
+            }
+          }
+        }
+
+        # Tolerate all taints to run on every node
+        toleration {
+          operator = "Exists"
+        }
+      }
+    }
+  }
+}
 
 output "technitium_admin_password" {
   value = var.technitium_admin_password

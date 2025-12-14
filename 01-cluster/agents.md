@@ -51,7 +51,7 @@ After successful apply:
 1. **Get cluster access**:
    ```bash
    # Extract kubeconfig (shown in terraform output)
-   ssh ubuntu@<master-ip> "sudo cat /etc/rancher/k3s/k3s.yaml" > ~/.kube/config
+   ssh bunker@<master-ip> "sudo cat /etc/rancher/k3s/k3s.yaml" > ~/.kube/config
    sed -i "s/127.0.0.1/<master-ip>/g" ~/.kube/config
    ```
 

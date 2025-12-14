@@ -109,18 +109,69 @@ The cloud-init configuration installs and configures:
 - Data Directory: `/opt/foundryvtt/data/`
 - Systemd service: `/etc/systemd/system/foundryvtt.service`
 - Nginx config: `/etc/nginx/sites-available/foundryvtt`
+- **Important**: Nginx config includes TinyAuth integration with proper `/auth` endpoint handling
 
 ### Helper Scripts
 - `/home/ubuntu/setup-foundryvtt.sh` - Status and next steps
 
+## Nginx Configuration for TinyAuth Integration
+
+The nginx configuration must be properly set up to work with both TinyAuth authentication and FoundryVTT's admin endpoints. The key requirement is to avoid conflicts with FoundryVTT's `/auth` endpoint.
+
+### Required Configuration Pattern
+
+```nginx
+# TinyAuth subrequest - Use /auth-check to avoid conflicts
+location = /auth-check {
+    internal;
+    proxy_pass https://auth.cdklein.com/api/auth/nginx;
+    proxy_pass_request_body off;
+    proxy_set_header Content-Length "";
+    proxy_set_header X-Original-URI $request_uri;
+    proxy_set_header X-Original-Method $request_method;
+    proxy_set_header X-Forwarded-Host $host;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+}
+
+location / {
+    # Check authentication using the renamed internal location
+    auth_request /auth-check;
+    
+    # Pass authentication headers from TinyAuth
+    auth_request_set $user $upstream_http_x_forwarded_user;
+    proxy_set_header X-Forwarded-User $user;
+    
+    # If auth fails, redirect to TinyAuth login
+    error_page 401 = @auth_redirect;
+    error_page 403 = @auth_redirect;
+    
+    # Proxy to FoundryVTT (including /auth endpoint)
+    proxy_pass http://localhost:30000;
+    # ... standard proxy headers
+}
+
+location @auth_redirect {
+    return 302 https://auth.cdklein.com/?redirect_url=https://$host$request_uri;
+}
+```
+
+### Critical Points
+
+1. **Use `/auth-check` for internal authentication**: Never use `/auth` as the internal location name
+2. **FoundryVTT's `/auth` endpoint**: Must remain publicly accessible for admin setup
+3. **Authentication flow**: TinyAuth protects all requests while allowing FoundryVTT admin access
+
 ## Next Steps After VM Creation
 
-1. **Download FoundryVTT**: Get the Node.js version from your FoundryVTT account
-2. **Transfer Data**: Copy your existing FoundryVTT data from Kubernetes
-3. **Install FoundryVTT**: Extract and set up the application
-4. **Configure SSL**: Set up Let's Encrypt certificates
-5. **Update DNS**: Point your domain to the new VM IP
-6. **Start Service**: Enable and start the FoundryVTT systemd service
+1. **Configure Nginx**: Set up the nginx configuration with proper TinyAuth integration (see above)
+2. **Download FoundryVTT**: Get the Node.js version from your FoundryVTT account
+3. **Transfer Data**: Copy your existing FoundryVTT data from Kubernetes
+4. **Install FoundryVTT**: Extract and set up the application
+5. **Configure SSL**: Set up Let's Encrypt certificates
+6. **Update DNS**: Point your domain to the new VM IP
+7. **Start Service**: Enable and start the FoundryVTT systemd service
+8. **Test Access**: Verify both authentication and `/auth` endpoint work correctly
 
 See the main transition documentation for detailed steps on data migration and FoundryVTT installation.
 
