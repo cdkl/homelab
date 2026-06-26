@@ -35,14 +35,15 @@ locals {
   merged_hosts = merge(
     var.pihole_local_hosts,
     {
-      "birdnet-go.cdklein.com" = local.master_ip,
+      "birdnet-go.cdklein.com" = "192.168.101.236",
+      "birdcollage.cdklein.com" = "192.168.101.237",
       "kegserve.cdklein.com"   = local.master_ip,
       "pocketid.cdklein.com"   = "192.168.101.233",
       "auth.cdklein.com"       = "192.168.101.233",
       "static.cdklein.com"     = "192.168.101.233",
       "tunnel-metrics.cdklein.com" = "192.168.101.233",
       # Legacy hosts from prior Technitium zone
-      "homeassistant.cdklein.com" = "192.168.101.77",
+      "homeassistant.cdklein.com" = "192.168.102.2",
       "hunkerbunker.cdklein.com"  = "192.168.101.77",
       "brewpi.cdklein.com"        = "192.168.101.14",
       "lorez.cdklein.com"         = "192.168.101.2",
@@ -68,6 +69,7 @@ resource "null_resource" "pihole_local_dns" {
   triggers = {
     conf_sha = sha1("${local.hosts_json}|${local.cname_json}")
     host     = var.pihole_vm_host
+    version  = "3" # bumped to add HTTPS regex blocking
   }
 
   connection {
@@ -82,6 +84,10 @@ resource "null_resource" "pihole_local_dns" {
       # Configure Pi-hole v6 local DNS via pihole-FTL (dns.hosts and dns.cnameRecords)
       "sudo docker exec pihole pihole-FTL --config dns.hosts '${local.hosts_json}'",
       "sudo docker exec pihole pihole-FTL --config dns.cnameRecords '${local.cname_json}'",
+      # Make Pi-hole authoritative for cdklein.com - never forward upstream
+      "sudo docker exec pihole bash -c 'echo local=/cdklein.com/ > /etc/dnsmasq.d/99-local-cdklein.conf'",
+      # Block HTTPS/SVCB records for cdklein.com to prevent Chrome ECH fallback error
+      "sudo docker exec pihole pihole --regex '^.*\\.cdklein\\.com;querytype=HTTPS' || true",
       # Reload DNS
       "sudo docker exec pihole pihole reloaddns || sudo docker restart pihole"
     ]
