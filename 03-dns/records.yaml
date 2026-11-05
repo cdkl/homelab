@@ -1,0 +1,30 @@
+zone: cdklein.com
+catalog: cluster-catalog.cluster.home.arpa
+
+hosts:
+  ns1.cdklein.com: 192.168.101.239
+  ns2.cdklein.com: 192.168.101.240
+  bunker1.cdklein.com: 192.168.101.33
+  bunker2.cdklein.com: 192.168.101.3
+  pihole.cdklein.com: 192.168.101.100
+  traefik.cdklein.com: 192.168.101.233
+  longhorn.cdklein.com: 192.168.101.233
+  pocketid.cdklein.com: 192.168.101.233
+  auth.cdklein.com: 192.168.101.233
+  static.cdklein.com: 192.168.101.233
+  tunnel-metrics.cdklein.com: 192.168.101.233
+  birdnet-go.cdklein.com: 192.168.101.236
+  birdcollage.cdklein.com: 192.168.101.237
+  pulse.cdklein.com: 192.168.101.238
+  birdcollage-eink.cdklein.com: 192.168.101.46
+  kegserve.cdklein.com: 192.168.101.185
+  foundryvtt.cdklein.com: 192.168.101.204
+  homeassistant.cdklein.com: 192.168.102.2
+  hunkerbunker.cdklein.com: 192.168.101.77
+  brewpi.cdklein.com: 192.168.101.14
+  lorez.cdklein.com: 192.168.101.2
+  birdnet.cdklein.com: 192.168.101.172
+
+cnames:
+  proxmbox.cdklein.com: bunker1.cdklein.com
+  dns.cdklein.com: ns1.cdklein.com

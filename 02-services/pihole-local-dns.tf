@@ -37,6 +37,8 @@ locals {
     {
       "birdnet-go.cdklein.com" = "192.168.101.236",
       "birdcollage.cdklein.com" = "192.168.101.237",
+      "pulse.cdklein.com" = "192.168.101.238",
+      "birdcollage-eink.cdklein.com" = "192.168.101.46",
       "kegserve.cdklein.com"   = local.master_ip,
       "pocketid.cdklein.com"   = "192.168.101.233",
       "auth.cdklein.com"       = "192.168.101.233",

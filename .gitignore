@@ -52,3 +52,7 @@ kubeconfig
 *.crt
 *.key
 *.pem
+
+# local secrets
+**/.secrets
+**/.env
